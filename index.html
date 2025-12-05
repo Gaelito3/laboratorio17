@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio 17 - Manejo de Excepciones y Asincronía</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #4cc9f0;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4cc9f0;
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        h2 {
+            color: #72efdd;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #4361ee;
+        }
+        
+        h3 {
+            color: #b8c0ff;
+            margin: 20px 0 10px 0;
+        }
+        
+        .ejercicio {
+            background-color: rgba(40, 40, 60, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4361ee;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .ejercicio:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #4361ee, #3a0ca3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background: linear-gradient(90deg, #3a0ca3, #4361ee);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-callback {
+            background: linear-gradient(90deg, #f72585, #b5179e);
+        }
+        
+        .btn-promesa {
+            background: linear-gradient(90deg, #4cc9f0, #4895ef);
+        }
+        
+        .btn-async {
+            background: linear-gradient(90deg, #52b788, #2d6a4f);
+        }
+        
+        .console {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin-top: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+            border: 1px solid #30363d;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+        }
+        
+        .console-title {
+            color: #7ee787;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .clear-btn {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .clear-btn:hover {
+            background-color: #2ea043;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #4cc9f0;
+            color: #a5b4cb;
+            font-size: 0.9rem;
+        }
+        
+        .codigo {
+            background-color: #1e1e2e;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            border: 1px solid #44475a;
+        }
+        
+        .info {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-left: 4px solid #4361ee;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .success { color: #7ee787; }
+        .error { color: #ff7b72; }
+        .warning { color: #ffa657; }
+        .info-text { color: #79c0ff; }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Laboratorio 17 - JavaScript</h1>
+            <h2>Manejo de Excepciones y Asincronía</h2>
+            <p class="info-text">Ejercicios completos de JavaScript: Excepciones, Callbacks, Promesas y Async/Await</p>
+        </header>
+        
+        <section class="section">
+            <h2>Ejercicios de Manejo de Excepciones (1-8)</h2>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 3: Provocar error y mostrar mensaje</h3>
+                <p>Genera un ReferenceError intencional y muestra el mensaje del error.</p>
+                <button class="btn" onclick="ejercicio3()">Ejecutar Ejercicio 3</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 3</span>
+                        <button class="clear-btn" onclick="clearConsole('console3')">Limpiar</button>
+                    </div>
+                    <div id="console3"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 4: SyntaxError con JSON.parse</h3>
+                <p>Intenta parsear un JSON inválido y captura el SyntaxError.</p>
+                <button class="btn" onclick="ejercicio4()">Ejecutar Ejercicio 4</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 4</span>
+                        <button class="clear-btn" onclick="clearConsole('console4')">Limpiar</button>
+                    </div>
+                    <div id="console4"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 5: Bloque finally</h3>
+                <p>Ejecuta un bloque try-catch con finally para demostrar que siempre se ejecuta.</p>
+                <button class="btn" onclick="ejercicio5()">Ejecutar Ejercicio 5</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 5</span>
+                        <button class="clear-btn" onclick="clearConsole('console5')">Limpiar</button>
+                    </div>
+                    <div id="console5"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 6: Función validaEdad</h3>
+                <p>Crea una función que valide la edad y lance un error si no es válida.</p>
+                <button class="btn" onclick="ejercicio6()">Ejecutar Ejercicio 6</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 6</span>
+                        <button class="clear-btn" onclick="clearConsole('console6')">Limpiar</button>
+                    </div>
+                    <div id="console6"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 7: TypeError y instanceof</h3>
+                <p>Provoca un TypeError y verifica el tipo de error con instanceof.</p>
+                <button class="btn" onclick="ejercicio7()">Ejecutar Ejercicio 7</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 7</span>
+                        <button class="clear-btn" onclick="clearConsole('console7')">Limpiar</button>
+                    </div>
+                    <div id="console7"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 8: Propagación de errores</h3>
+                <p>Demuestra cómo se propagan los errores entre diferentes niveles de funciones.</p>
+                <button class="btn" onclick="ejercicio8()">Ejecutar Ejercicio 8</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 8</span>
+                        <button class="clear-btn" onclick="clearConsole('console8')">Limpiar</button>
+                    </div>
+                    <div id="console8"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>Ejercicios con Callbacks (9-12)</h2>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 9: Cargar mensaje con callback</h3>
+                <p>Función que espera 1 segundo y luego ejecuta un callback con un mensaje.</p>
+                <button class="btn btn-callback" onclick="ejercicio9()">Ejecutar Ejercicio 9</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 9</span>
+                        <button class="clear-btn" onclick="clearConsole('console9')">Limpiar</button>
+                    </div>
+                    <div id="console9"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 10: Cargar usuario aleatorio</h3>
+                <p>Carga un usuario después de un tiempo aleatorio entre 800ms y 1500ms.</p>
+                <button class="btn btn-callback" onclick="ejercicio10()">Ejecutar Ejercicio 10</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 10</span>
+                        <button class="clear-btn" onclick="clearConsole('console10')">Limpiar</button>
+                    </div>
+                    <div id="console10"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 11: División asíncrona</h3>
+                <p>Función que realiza una división después de 1.5 segundos, maneja división por cero.</p>
+                <div class="codigo">Dividir 10 entre 2: <button class="btn btn-callback" onclick="ejercicio11(10, 2)">Ejecutar</button></div>
+                <div class="codigo">Dividir 10 entre 0: <button class="btn btn-callback" onclick="ejercicio11(10, 0)">Ejecutar</button></div>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 11</span>
+                        <button class="clear-btn" onclick="clearConsole('console11')">Limpiar</button>
+                    </div>
+                    <div id="console11"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 12: Procesar lista con delays aleatorios</h3>
+                <p>Procesa una lista de números, cada uno con un delay aleatorio entre 500ms y 1500ms.</p>
+                <button class="btn btn-callback" onclick="ejercicio12()">Ejecutar Ejercicio 12</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 12</span>
+                        <button class="clear-btn" onclick="clearConsole('console12')">Limpiar</button>
+                    </div>
+                    <div id="console12"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>Ejercicios con Promesas (13-16)</h2>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 13: Cargar mensaje con promesas</h3>
+                <p>Versión con promesa del ejercicio 9.</p>
+                <button class="btn btn-promesa" onclick="ejercicio13()">Ejecutar Ejercicio 13</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 13</span>
+                        <button class="clear-btn" onclick="clearConsole('console13')">Limpiar</button>
+                    </div>
+                    <div id="console13"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 14: Cargar usuario con promesas</h3>
+                <p>Versión con promesa del ejercicio 10.</p>
+                <button class="btn btn-promesa" onclick="ejercicio14()">Ejecutar Ejercicio 14</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 14</span>
+                        <button class="clear-btn" onclick="clearConsole('console14')">Limpiar</button>
+                    </div>
+                    <div id="console14"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 15: División asíncrona con promesas</h3>
+                <p>Versión con promesa del ejercicio 11.</p>
+                <div class="codigo">Dividir 20 entre 4: <button class="btn btn-promesa" onclick="ejercicio15(20, 4)">Ejecutar</button></div>
+                <div class="codigo">Dividir 15 entre 0: <button class="btn btn-promesa" onclick="ejercicio15(15, 0)">Ejecutar</button></div>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 15</span>
+                        <button class="clear-btn" onclick="clearConsole('console15')">Limpiar</button>
+                    </div>
+                    <div id="console15"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 16: Procesar lista con promesas</h3>
+                <p>Versión con promesa del ejercicio 12.</p>
+                <button class="btn btn-promesa" onclick="ejercicio16()">Ejecutar Ejercicio 16</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 16</span>
+                        <button class="clear-btn" onclick="clearConsole('console16')">Limpiar</button>
+                    </div>
+                    <div id="console16"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>Ejercicios con Async/Await (17-20)</h2>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 17: Cargar mensaje con async/await</h3>
+                <p>Versión con async/await del ejercicio 9.</p>
+                <button class="btn btn-async" onclick="ejercicio17()">Ejecutar Ejercicio 17</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 17</span>
+                        <button class="clear-btn" onclick="clearConsole('console17')">Limpiar</button>
+                    </div>
+                    <div id="console17"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 18: Cargar usuario con async/await</h3>
+                <p>Versión con async/await del ejercicio 10.</p>
+                <button class="btn btn-async" onclick="ejercicio18()">Ejecutar Ejercicio 18</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 18</span>
+                        <button class="clear-btn" onclick="clearConsole('console18')">Limpiar</button>
+                    </div>
+                    <div id="console18"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 19: División asíncrona con async/await</h3>
+                <p>Versión con async/await del ejercicio 11.</p>
+                <div class="codigo">Dividir 30 entre 5: <button class="btn btn-async" onclick="ejercicio19(30, 5)">Ejecutar</button></div>
+                <div class="codigo">Dividir 8 entre 0: <button class="btn btn-async" onclick="ejercicio19(8, 0)">Ejecutar</button></div>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 19</span>
+                        <button class="clear-btn" onclick="clearConsole('console19')">Limpiar</button>
+                    </div>
+                    <div id="console19"></div>
+                </div>
+            </div>
+            
+            <div class="ejercicio">
+                <h3>Ejercicio 20: Procesar lista con async/await</h3>
+                <p>Versión con async/await del ejercicio 12.</p>
+                <button class="btn btn-async" onclick="ejercicio20()">Ejecutar Ejercicio 20</button>
+                <div class="console">
+                    <div class="console-title">
+                        <span>Consola - Ejercicio 20</span>
+                        <button class="clear-btn" onclick="clearConsole('console20')">Limpiar</button>
+                    </div>
+                    <div id="console20"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>Ejercicio 21: GitHub y Documentación</h2>
+            <div class="info">
+                <p><strong>Instrucciones para el ejercicio 21:</strong></p>
+                <ol>
+                    <li>Crea un repositorio en GitHub llamado <span class="success">"laboratorio17-js"</span></li>
+                    <li>Sube estos archivos (index.html y script.js) a tu repositorio</li>
+                    <li>Toma capturas de pantalla del código y de la ejecución en consola</li>
+                    <li>Crea un PDF con las capturas y la URL del repositorio</li>
+                    <li>Sube el PDF al aula virtual</li>
+                </ol>
+            </div>
+            <button class="btn" onclick="simularEjercicio21()">Simular Ejercicio 21</button>
+            <div class="console">
+                <div class="console-title">
+                    <span>Consola - Ejercicio 21</span>
+                    <button class="clear-btn" onclick="clearConsole('console21')">Limpiar</button>
+                </div>
+                <div id="console21"></div>
+            </div>
+        </section>
+        
+        <footer>
+            <p><strong>Autor:</strong> Gael Alexander Huamaní Machaca</p>
+            <p><strong>Tiempo:</strong> 1.5 horas</p>
+            <p>EPIS - UNSA 2025 II - Introducción al Desarrollo Web</p>
+            <p>Laboratorio 17 - JavaScript: Manejo de Excepciones y Asincronía</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
